@@ -4,6 +4,46 @@
 
 // Let's find the function selector -> route it to the code that updates horses
 #define macro MAIN() = takes(0) returns (0) {
-    0x00
-    
+    // 0x00    // [0]
+    // // 0x02    // TOP [2, 0] BOTTOM
+    // calldataload // [calldata]
+    // // How do we cut down the calldata -> function selector?
+    // // SHR opcode
+    // // 0x0102 (bytes)
+    // // 1 bytes = 8 bits
+    // // 0x0102 >> 4 = 0x010 == 16
+    // // 64/2 = 32 bytes -> right
+    // // We need to right shift 28 bytes / 224 bits == 0xe0
+    // 0xe0    // [0xe0, calldata (32)]
+    // shr     // [function selector]
+    0x00 calldataload 0xe0 shr
+
+    // Jump -> function data associated with the selector
+    // If function selector == updateHorseNumber -> jump to updateHorseNumber
+    // If function selector == readHorseNumber -> jump to readHorseNumber
+    // 0xcdfead2e -> updateHorseNumber
+    // 0xe026c017 -> readHorseNumbe
+
+    // updateHorseNumber selector
+    dup1            // [function_selector, function_selector]
+    0xcdfead2e      // [0xcdfead2e, function selector, function_selector]
+    eq              // [true_if_func_selector_matches, function_selector]
+    // jump to updateHorseNumber code if true
+    updateJump      // [updateHorseNumberProgramCounter, true/false, function_selector]
+    jumpi          // [function_selector]
+
+    // readNumberOfHorses, 0xe026c017
+    0xe026c017      // [0xe026c017, function selector]
+    eq             // [true_if_func_selector_matches, function_selector]
+    readJump       // [readJump, true_if_func_selector_matches]
+    jumpi          // []
+
+    updateJump:
+        SET_NUMBER_OF_HORSES()
+    readJump:
+        GET_NUMBER_OF_HORSES()
 }
+
+#define macro SET_NUMBER_OF_HORSES() = takes(0) returns(0){}
+
+#define macro GET_NUMBER_OF_HORSES() = takes(0) returns(0){}
